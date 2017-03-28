@@ -1,0 +1,22 @@
+[
+  {
+    "name": "privatbankMyk",
+    "country": "Ukraine",
+    "type": 1,
+    "depositor": "depositor1",
+    "accountId": "1234",
+    "amountOnDeposit": 1000,
+    "profitability": 2.0,
+    "timeConstraints": 365
+  },
+  {
+    "name": "c",
+    "country": "Ukraine",
+    "type": 1,
+    "depositor": "depositor2",
+    "accountId": "12345",
+    "amountOnDeposit": 2000,
+    "profitability": 3.0,
+    "timeConstraints": 365
+  }
+]
