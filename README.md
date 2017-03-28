@@ -40,6 +40,6 @@ info depositor <depositor> - информация по имени вкладчи
 show type <type> - список всех вкладов указанного типа
 show bank <name> - список всех вкладов в указанном банке
 add <deposit info> - добавить информацию о вкладе
-Usage: add name <name> country <country> type <type> depositor <depositor> accountId <accountId> amountOnDeposit profitability <profitability> timeConstraints <timeConstraints>
+Usage: add name <name> country <country> type <type> depositor <depositor> accountId <accountId> amountOnDeposit <amountOnDeposit> profitability <profitability> timeConstraints <timeConstraints>
 delete <account id>"
 ```
