@@ -46,7 +46,7 @@ public class App {
     }
 
     private static void check(String command) {
-         if ("list".equals(command)) {
+        if ("list".equals(command)) {
             Action action = new Action();
             action.setAction("list");
             List<Contribution> contributions = client.list(action);
@@ -131,6 +131,10 @@ public class App {
                 map.put(key, value);
             }
             Contribution contribution = parseContribution(map);
+            if (contribution == null) {
+                System.out.println("Cannot parse contribution");
+                return;
+            }
             action.setParam(gson.toJson(contribution));
             System.out.println(client.add(action));
             showMenu();
@@ -154,9 +158,13 @@ public class App {
         value = map.get("country");
         contribution.setCountry(value);
         value = map.get("type");
-        contribution.setType(value != null ? ContributionType.get(Integer.parseInt(value)) : null);
+        contribution.setType(value != null ? ContributionType.get(Integer.parseInt(value)) : ContributionType.get(0));
         contribution.setDepositor(map.get("depositor"));
-        contribution.setAccountId(map.get("accountId"));
+        value = map.get("accountId");
+        if (value == null) {
+            return null;
+        }
+        contribution.setAccountId(value);
         value = map.get("amountOnDeposit");
         contribution.setAmountOnDeposit(value != null ? Integer.parseInt(value) : 0);
         value = map.get("profitability");

@@ -11,8 +11,8 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,11 +27,10 @@ public class Server implements Runnable {
     }.getType();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
-    private static final int DEFAULT_NUMBER_OF_THREADS = 10
-            ;
+    private static final int DEFAULT_NUMBER_OF_THREADS = 10;
 
     static Gson gson;
-    static List<Contribution> contributions = new ArrayList<>();
+    static List<Contribution> contributions = new CopyOnWriteArrayList<>();
 
     static {
         GSON_BUILDER.registerTypeAdapter(ContributionType.class, new ContributionTypeDeserializer());

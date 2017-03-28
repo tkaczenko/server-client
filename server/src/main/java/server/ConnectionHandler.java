@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,24 +97,21 @@ class ConnectionHandler implements Runnable {
     }
 
     private void add(Contribution contribution) {
-        List<Contribution> list = Collections.synchronizedList(contributions);
-        synchronized (list) {
-            Contribution found = list.stream()
-                    .filter(contribution1 -> contribution.getAccountId().equals(contribution1.getAccountId()))
-                    .findFirst()
-                    .orElse(null);
-            if (found != null) {
-                streamWriter.println("Found that id");
-                streamWriter.flush();
-                return;
-            }
-            if (contribution.getAmountOnDeposit() <= 0 ||
-                    contribution.getProfitability() <= 0 ||
-                    contribution.getTimeConstraints() <= 0) {
-                streamWriter.println("Required params cannot be null");
-                streamWriter.flush();
-                return;
-            }
+        Contribution found = contributions.stream()
+                .filter(contribution1 -> contribution.getAccountId().equals(contribution1.getAccountId()))
+                .findFirst()
+                .orElse(null);
+        if (found != null) {
+            streamWriter.println("Found that id");
+            streamWriter.flush();
+            return;
+        }
+        if (contribution.getAmountOnDeposit() <= 0 ||
+                contribution.getProfitability() <= 0 ||
+                contribution.getTimeConstraints() <= 0) {
+            streamWriter.println("Required params cannot be null");
+            streamWriter.flush();
+            return;
         }
         streamWriter.println(contributions.add(contribution) ? "OK" : "NOT OK");
         streamWriter.flush();
@@ -127,14 +123,12 @@ class ConnectionHandler implements Runnable {
     }
 
     private void sum() throws IOException {
-        List<Contribution> list = Collections.synchronizedList(contributions);
-        synchronized (list) {
-            long sum = list.stream()
-                    .mapToInt(Contribution::getAmountOnDeposit)
-                    .sum();
-            streamWriter.println(sum);
-            streamWriter.flush();
-        }
+        long sum = contributions.stream()
+                .mapToInt(Contribution::getAmountOnDeposit)
+                .sum();
+        streamWriter.println(sum);
+        streamWriter.flush();
+
     }
 
     private void count() throws IOException {
@@ -143,48 +137,35 @@ class ConnectionHandler implements Runnable {
     }
 
     private void getContributionByAccountId(String accountID) throws IOException {
-        List<Contribution> list = Collections.synchronizedList(contributions);
-        synchronized (list) {
-            Contribution res = list.stream()
-                    .filter(contribution -> accountID.equals(contribution.getAccountId()))
-                    .findFirst()
-                    .orElse(null);
-            streamWriter.println(gson.toJson(res));
-            streamWriter.flush();
-        }
+        Contribution res = contributions.stream()
+                .filter(contribution -> accountID.equals(contribution.getAccountId()))
+                .findFirst()
+                .orElse(null);
+        streamWriter.println(gson.toJson(res));
+        streamWriter.flush();
     }
 
     private void getContributionsByDepositor(String depositor) throws IOException {
-        List<Contribution> list = Collections.synchronizedList(contributions);
-        synchronized (list) {
-            List<Contribution> contributions = list.stream()
-                    .filter(contribution -> depositor.equals(contribution.getDepositor()))
-                    .collect(Collectors.toList());
-            streamWriter.println(gson.toJson(contributions));
-            streamWriter.flush();
-        }
+        List<Contribution> res = contributions.stream()
+                .filter(contribution -> depositor.equals(contribution.getDepositor()))
+                .collect(Collectors.toList());
+        streamWriter.println(gson.toJson(res));
+        streamWriter.flush();
     }
 
     private void getContributionsByType(String type) throws IOException {
-        List<Contribution> list = Collections.synchronizedList(contributions);
-        synchronized (list) {
-            List<Contribution> contributions = list.stream()
-                    .filter(contribution -> type.equals(contribution.getType().getDescription()))
-                    .collect(Collectors.toList());
-
-            streamWriter.println(gson.toJson(contributions));
-            streamWriter.flush();
-        }
+        List<Contribution> res = contributions.stream()
+                .filter(contribution -> type.equals(contribution.getType().getDescription()))
+                .collect(Collectors.toList());
+        streamWriter.println(gson.toJson(res));
+        streamWriter.flush();
     }
 
     private void getContributionsByBank(String bank) {
-        List<Contribution> list = Collections.synchronizedList(contributions);
-        synchronized (list) {
-            List<Contribution> contributions = list.stream()
-                    .filter(contribution -> bank.equals(contribution.getName()))
-                    .collect(Collectors.toList());
-            streamWriter.println(gson.toJson(contributions));
-            streamWriter.flush();
-        }
+        List<Contribution> res = contributions.stream()
+                .filter(contribution -> bank.equals(contribution.getName()))
+                .collect(Collectors.toList());
+        streamWriter.println(gson.toJson(res));
+        streamWriter.flush();
     }
 }
