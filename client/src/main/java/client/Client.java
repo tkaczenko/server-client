@@ -1,18 +1,15 @@
 package client;
 
-import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
 import model.Action;
 import model.Contribution;
-import model.ContributionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import service.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.lang.reflect.Type;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -20,24 +17,12 @@ import java.util.List;
 /**
  * Created by tkaczenko on 26.03.17.
  */
-public class Client {
+public class Client extends Executor {
     private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
 
-    private static final GsonBuilder GSON_BUILDER = new GsonBuilder();
-    public static Gson gson;
-    private static final Type type = new TypeToken<List<Contribution>>() {
-    }.getType();
-
-    static {
-        GSON_BUILDER.registerTypeAdapter(ContributionType.class, new ContributionTypeDeserializer());
-        gson = GSON_BUILDER.create();
-    }
-
+    private final Service service = new Service(this);
     private String hostIp;
     private int hostPort;
-
-    private BufferedReader socketReader;
-    private PrintWriter socketWriter;
 
     public Client(String hostIp, int hostPort) {
         this.hostIp = hostIp;
@@ -66,51 +51,26 @@ public class Client {
     }
 
     public List<Contribution> list(Action action) {
-        return gson.fromJson(getInfoByServer(action), type);
+        return service.list(action);
     }
 
     public long sum(Action action) {
-        return Long.parseLong(getInfoByServer(action));
+        return service.sum(action);
     }
 
     public int count(Action action) {
-        return Integer.parseInt(getInfoByServer(action));
+        return service.count(action);
     }
 
     public Contribution getContributionByAccountId(Action action) {
-        return gson.fromJson(getInfoByServer(action), Contribution.class);
+        return service.getContributionByAccountId(action);
     }
 
     public String add(Action action) {
-        return getInfoByServer(action);
+        return service.add(action);
     }
 
     public String delete(Action action) {
-        return getInfoByServer(action);
-    }
-
-    private String getInfoByServer(Action action) {
-        socketWriter.println(GSON_BUILDER.create().toJson(action));
-        socketWriter.flush();
-        String answer = null;
-        try {
-            answer = socketReader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return answer;
-    }
-
-    private static class ContributionTypeDeserializer implements JsonDeserializer<ContributionType> {
-        @Override
-        public ContributionType deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-                throws JsonParseException {
-            ContributionType[] types = ContributionType.values();
-            for (ContributionType type : types) {
-                if (type.getCode() == json.getAsInt())
-                    return type;
-            }
-            return null;
-        }
+        return service.delete(action);
     }
 }

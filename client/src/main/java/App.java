@@ -2,12 +2,15 @@ import client.Client;
 import model.Action;
 import model.Contribution;
 import model.ContributionType;
+import util.ContributionUtil;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
 
-import static client.Client.gson;
+import static service.Service.gson;
 
 /**
  * Created by tkaczenko on 26.03.17.
@@ -47,32 +50,23 @@ public class App {
 
     private static void check(String command) {
         if ("list".equals(command)) {
-            Action action = new Action();
-            action.setAction("list");
+            Action action = ContributionUtil.getAction(null, "list");
             List<Contribution> contributions = client.list(action);
             printContributionHeader();
             contributions.forEach(App::printContribution);
             showMenu();
         } else if ("sum".equals(command)) {
-            Action action = new Action();
-            action.setAction("sum");
+            Action action = ContributionUtil.getAction(null, "sum");
             long sum = client.sum(action);
             System.out.println("Общая сумма вкладов: " + sum);
             showMenu();
         } else if ("count".equals(command)) {
-            Action action = new Action();
-            action.setAction("count");
+            Action action = ContributionUtil.getAction(null, "count");
             int count = client.count(action);
             System.out.println("Количество вкладов: " + count);
             showMenu();
         } else if (command.contains("info account")) {
-            Action action = new Action();
-            action.setAction("info account");
-            List<String> words = splitWords(command);
-            if (words.size() < 3) {
-                return;
-            }
-            action.setParam(words.get(2));
+            Action action = ContributionUtil.getAction(command, "info account");
             Contribution contribution = client.getContributionByAccountId(action);
             if (contribution != null) {
                 printContributionHeader();
@@ -82,37 +76,19 @@ public class App {
             }
             showMenu();
         } else if (command.contains("info depositor")) {
-            Action action = new Action();
-            action.setAction("info depositor");
-            List<String> words = splitWords(command);
-            if (words.size() < 3) {
-                return;
-            }
-            action.setParam(words.get(2));
+            Action action = ContributionUtil.getAction(command, "info depositor");
             List<Contribution> contributions = client.list(action);
             printContributionHeader();
             contributions.forEach(App::printContribution);
             showMenu();
         } else if (command.contains("show type")) {
-            Action action = new Action();
-            action.setAction("show type");
-            List<String> words = splitWords(command);
-            if (words.size() < 3) {
-                return;
-            }
-            action.setParam(words.get(2));
+            Action action = ContributionUtil.getAction(command, "show type");
             List<Contribution> contributions = client.list(action);
             printContributionHeader();
             contributions.forEach(App::printContribution);
             showMenu();
         } else if (command.contains("show bank")) {
-            Action action = new Action();
-            action.setAction("show bank");
-            List<String> words = splitWords(command);
-            if (words.size() < 3) {
-                return;
-            }
-            action.setParam(words.get(2));
+            Action action = ContributionUtil.getAction(command, "show bank");
             List<Contribution> contributions = client.list(action);
             printContributionHeader();
             contributions.forEach(App::printContribution);
@@ -120,17 +96,8 @@ public class App {
         } else if (command.contains("add")) {
             Action action = new Action();
             action.setAction("add");
-            List<String> words = splitWords(command);
-            Map<String, String> map = new HashMap<>();
-            for (int i = 0; i < words.size(); i++) {
-                String key = words.get(i);
-                String value = null;
-                if (words.size() > i + 1) {
-                    value = words.get(i + 1);
-                }
-                map.put(key, value);
-            }
-            Contribution contribution = parseContribution(map);
+            Map<String, String> map = prepareMapOfContribution(command);
+            Contribution contribution = ContributionUtil.parseContribution(map);
             if (contribution == null) {
                 System.out.println("Cannot parse contribution");
                 return;
@@ -139,46 +106,24 @@ public class App {
             System.out.println(client.add(action));
             showMenu();
         } else if (command.contains("delete")) {
-            Action action = new Action();
-            action.setAction("delete");
-            List<String> words = splitWords(command);
-            if (words.size() < 2) {
-                return;
-            }
-            action.setParam(words.get(1));
+            Action action = ContributionUtil.getAction(command, "delete");
             System.out.println(client.delete(action));
             showMenu();
         }
     }
 
-    private static Contribution parseContribution(Map<String, String> map) {
-        Contribution contribution = new Contribution();
-        String value = map.get("name");
-        contribution.setName(value);
-        value = map.get("country");
-        contribution.setCountry(value);
-        value = map.get("type");
-        contribution.setType(value != null ? ContributionType.get(Integer.parseInt(value)) : ContributionType.get(0));
-        contribution.setDepositor(map.get("depositor"));
-        value = map.get("accountId");
-        if (value == null) {
-            return null;
+    private static Map<String, String> prepareMapOfContribution(String command) {
+        List<String> words = ContributionUtil.splitWords(command);
+        Map<String, String> map = new HashMap<>();
+        for (int i = 0; i < words.size(); i++) {
+            String key = words.get(i);
+            String value = null;
+            if (words.size() > i + 1) {
+                value = words.get(i + 1);
+            }
+            map.put(key, value);
         }
-        contribution.setAccountId(value);
-        value = map.get("amountOnDeposit");
-        contribution.setAmountOnDeposit(value != null ? Integer.parseInt(value) : 0);
-        value = map.get("profitability");
-        contribution.setProfitability(value != null ? Double.parseDouble(value) : 0);
-        value = map.get("timeConstraints");
-        contribution.setTimeConstraints(value != null ? Integer.parseInt(value) : 0);
-        return contribution;
-    }
-
-    private static List<String> splitWords(String str) {
-        return Arrays.stream(str.trim().split("\\s"))
-                .map(String::trim)
-                .filter(word -> word.length() > 0)
-                .collect(Collectors.toList());
+        return map;
     }
 
     private static void printContributionHeader() {
